@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Represents a dish on the menu with a fixed price and preparation time.
 public class Dish implements MenuItem {
     private final String name;

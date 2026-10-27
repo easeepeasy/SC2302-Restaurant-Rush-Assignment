@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Utility class for handling money, which is stored in cents.
 public final class Money {
     // Prevents objects of this class from being created.

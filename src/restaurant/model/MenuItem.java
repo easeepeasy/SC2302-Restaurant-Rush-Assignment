@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Interface for food items that customers can order.
 // All menu items have a name, price and preparation time.
 public interface MenuItem {

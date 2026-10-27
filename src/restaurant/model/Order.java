@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Represents a customer's order and tracks its preparation and payment status.
 // The bill is fixed when the order is placed.
 

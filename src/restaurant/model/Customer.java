@@ -1,3 +1,5 @@
+package restaurant.model;
+
 import java.util.List;
 
 // Base class for all customer types.

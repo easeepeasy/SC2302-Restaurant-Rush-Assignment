@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Represents the different states a customer can be in during the game.
 public enum CustomerState {
     WAITING,
