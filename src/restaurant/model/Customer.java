@@ -1,9 +1,7 @@
 package restaurant.model;
 
-import java.util.List;
-
 // Base class for all customer types.
-// Different customers have different waiting penalties.
+// Different customers have different waiting penalties and food choices.
 public abstract class Customer {
 
     public static final int MAX_SATISFACTION = 100;
@@ -12,6 +10,8 @@ public abstract class Customer {
     private int satisfaction = MAX_SATISFACTION;
     private CustomerState state = CustomerState.WAITING;
     private Order order;
+    private Table table;
+    private int readyToPayTurn;
 
     protected Customer(int id) {
         this.id = id;
@@ -33,68 +33,58 @@ public abstract class Customer {
         return order;
     }
 
+    // Used by the Cashier to pay the customer who has been ready to pay the longest.
+    public int getReadyToPayTurn() {
+        return readyToPayTurn;
+    }
+
     // Each customer type determines how much satisfaction it loses per turn.
-    public abstract int waitingPenalty();
+    protected abstract int waitingPenalty();
 
-    // Customers choose food based on their ID so the results are consistent.
-    // The modulo operator cycles through the menu items.
-    public MenuItem chooseItem(Menu menu) {
-        List<MenuItem> items = menu.getItems();
-        return items.get((id - 1) % items.size());
+    // Each customer type decides which menu item it orders.
+    public abstract MenuItem chooseItem(Menu menu);
+
+    // Returns the bill for an item. Subclasses can override this to apply discounts.
+    public int billFor(MenuItem item) {
+        return item.getPriceCents();
     }
 
-    // Checks if the customer is still waiting for a table or food.
-    public boolean isUnserved() {
-        return state == CustomerState.WAITING || state == CustomerState.SEATED;
-    }
-
-    public void markSeated() {
+    // Moves the customer from the waiting queue to a table.
+    public void seatAt(Table table) {
         if (state != CustomerState.WAITING) {
             throw new IllegalStateException("Customer " + id + " is not waiting");
         }
+        this.table = table;
         state = CustomerState.SEATED;
     }
 
-    public boolean hasOrdered() {
-        return order != null;
-    }
-
-    // Creates an order using the item chosen by the customer.
-    public Order placeOrder(Menu menu) {
-        if (state != CustomerState.SEATED || order != null) {
+    // Links the order that was taken for this customer.
+    public void attachOrder(Order order) {
+        if (state != CustomerState.SEATED || this.order != null) {
             throw new IllegalStateException("Customer " + id + " cannot order now");
         }
-        MenuItem item = chooseItem(menu);
-        order = new Order(this, item, item.getPriceCents());
-        return order;
+        this.order = order;
     }
 
-    // An order can only be served when it is ready.
-    public boolean canBeServed(int turn) {
-        return state == CustomerState.SEATED && order != null && order.canServe(turn);
-    }
-
-    public void markServed(int turn) {
-        if (!canBeServed(turn)) {
-            throw new IllegalStateException("Customer " + id + " cannot be served now");
+    // Called on the turn the order is served. The customer finishes eating on the next turn.
+    public void startEating(int turn) {
+        if (state != CustomerState.SEATED || order == null) {
+            throw new IllegalStateException("Customer " + id + " cannot start eating now");
         }
-        order.markServed(turn);
         state = CustomerState.EATING;
+        readyToPayTurn = turn + 1;
     }
 
     // The customer finishes eating one turn after being served.
-    public boolean finishEating(int turn) {
-        if (state == CustomerState.EATING && order.getServedTurn() < turn) {
+    public void finishEating(int turn) {
+        if (state == CustomerState.EATING && turn >= readyToPayTurn) {
             state = CustomerState.READY_TO_PAY;
-            order.markReadyToPay(turn);
-            return true;
         }
-        return false;
     }
 
-    // Payment can only happen after the customer is ready to pay.
+    // Payment can only happen on a later turn after the customer is ready to pay.
     public boolean canPay(int turn) {
-        return state == CustomerState.READY_TO_PAY && order.canPay(turn);
+        return state == CustomerState.READY_TO_PAY && turn > readyToPayTurn;
     }
 
     public void markPaid() {
@@ -125,10 +115,8 @@ public abstract class Customer {
         state = CustomerState.LEFT;
     }
 
-    public abstract String getTypeName();
-
     @Override
     public String toString() {
-        return getTypeName() + " #" + id + " (satisfaction " + satisfaction + ", " + state + ")";
+        return getClass().getSimpleName() + " #" + id + " (satisfaction " + satisfaction + ", " + state + ")";
     }
 }

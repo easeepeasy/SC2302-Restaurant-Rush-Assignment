@@ -13,8 +13,10 @@ public class RegularCustomer extends Customer {
         return WAITING_PENALTY;
     }
 
+    // Chooses food based on the customer ID so the results are consistent.
+    // The modulo operator cycles through the menu items.
     @Override
-    public String getTypeName() {
-        return "Regular";
+    public MenuItem chooseItem(Menu menu) {
+        return menu.itemAt((getId() - 1) % menu.listItems().size());
     }
 }
