@@ -51,7 +51,7 @@ public class Order {
 
     // Chef completes one preparation unit at a time.
     // Once all units are done, the order becomes READY.
-    public void advanceCookUnit(int turn) {
+    public void advanceOneUnit(int turn) {
         if (status != OrderStatus.PLACED && status != OrderStatus.PREPARING) {
             throw new IllegalStateException("Order " + id + " cannot be prepared while " + status);
         }

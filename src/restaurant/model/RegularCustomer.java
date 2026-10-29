@@ -13,10 +13,9 @@ public class RegularCustomer extends Customer {
         return WAITING_PENALTY;
     }
 
-    // Chooses food based on the customer ID so the results are consistent.
-    // The modulo operator cycles through the menu items.
+    // Regular customers use the default choice: cycle through the menu by customer ID.
     @Override
     public MenuItem chooseItem(Menu menu) {
-        return menu.itemAt((getId() - 1) % menu.listItems().size());
+        return super.chooseItem(menu);
     }
 }

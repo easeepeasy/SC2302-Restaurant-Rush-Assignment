@@ -1,7 +1,7 @@
 # Handover: Person A (Stage 1)
 
 Owner: Person A. Scope: `Customer`, `MenuItem`, `Order`, `Menu` and their states; money stored as cents.
-Branch: `stage-01`. Updated to follow the Stage 1 class diagram exactly.
+Branch: `stage-01`.
 
 ## 1. What is delivered
 
@@ -15,7 +15,6 @@ Branch: `stage-01`. Updated to follow the Stage 1 class diagram exactly.
 | `MenuItem.java` | Interface: `getName()`, `getPriceCents()`, `getPrepUnits()` |
 | `Dish.java` | A single dish (implements `MenuItem`) |
 | `Menu.java` | List of items: `Menu(List<MenuItem>)`, `listItems()`, `itemAt(index)` |
-| `Money.java` | `Money.format(1830)` -> `"$18.30"` (helper, not in the diagram) |
 
 Not included on purpose: VIP/Critic, `ComboMeal` (Stage 2/3), `ActionResult`, `ScoreBoard`, `GameConfig`, `GameResult` (other owners).
 
@@ -25,14 +24,14 @@ Salad $9.00 / 1 unit, Burger $15.00 / 1 unit, Pasta $18.00 / 2 units, e.g.
 
 ## 2. Design rules that live in these classes
 
-- **Money is integer cents.** Use `Money.format(cents)` for display.
+- **Money is integer cents.** To display, use `String.format("$%d.%02d", cents / 100, cents % 100)` (there is no `Money` class; it is not in the diagram).
 - **Timing is enforced by turn numbers**, so the controller does not recompute it:
   - A dish that became READY on turn *t* is servable from turn *t+1* (`order.canServe`).
   - `customer.startEating(t)` (called when served on turn *t*) sets `readyToPayTurn = t+1`.
   - `customer.finishEating(turn)` moves EATING to READY_TO_PAY once `turn >= readyToPayTurn`. It does nothing otherwise, so it is safe to call for every customer.
   - `customer.canPay(turn)` is true when READY_TO_PAY and `turn > readyToPayTurn`, so payment is one turn after eating finishes.
-- **Polymorphism:** `waitingPenalty()`, `chooseItem(menu)` are abstract in `Customer`; `billFor(item)` returns the item price by default. Stage 2 subclasses only override these, so the controller never checks customer types.
-- **Food choice rule (documented):** `RegularCustomer.chooseItem` rotates through the menu by customer id (id 1 -> Salad, 2 -> Burger, 3 -> Pasta, 4 -> Salad, ...). Deterministic, so runs are reproducible.
+- **Polymorphism:** `waitingPenalty()` is abstract in `Customer`; `chooseItem(menu)` (cycles by id) and `billFor(item)` (item price) have defaults. Stage 2 subclasses only override these, so the controller never checks customer types.
+- **Food choice rule (documented):** `Customer.chooseItem` (used by `RegularCustomer`) rotates through the menu by customer id (id 1 -> Salad, 2 -> Burger, 3 -> Pasta, 4 -> Salad, ...). Deterministic, so runs are reproducible.
 - **Order id** is passed in by whoever creates the order (`Restaurant.placeOrder`); use the customer id so there is one id per customer.
 - State-changing methods throw `IllegalStateException` when misused. Check the guard first (`order.canServe`, `customer.canPay`) and report the reason to the manager instead of catching the exception.
 
@@ -43,19 +42,19 @@ Salad $9.00 / 1 unit, Burger $15.00 / 1 unit, Pasta $18.00 / 2 units, e.g.
 |---|---|
 | Move customer from queue to a table | `table.occupy(customer)` then `customer.seatAt(table)` (customer must be WAITING) |
 | Who loses satisfaction at turn end? | `customer.getState()` is `WAITING` or `SEATED` (there is no `isUnserved()` any more) |
-| Amount to lose | `customer.waitingPenalty()` (protected, same package only) then `customer.loseSatisfaction(points)` (clamped at 0) |
+| Amount to lose | `customer.waitingPenalty()` then `customer.loseSatisfaction(points)` (clamped at 0) |
 | Did they hit 0? | `!customer.isSatisfied()` then `customer.leave()` (cancels the order) |
 
 After `leave()` you must free the table and remove them from the queue yourself.
 
-`Restaurant` changes needed because of the diagram: `markSeated()` -> `seatAt(table)`, and `isUnserved()` -> the state check above.
+`Restaurant.java` has already been updated to these calls and now implements all the methods in the diagram, including order, serve, eating and payment.
 
 ### Person C (Waiter, Chef, Cashier) and `Restaurant` order methods
 | Action | Guard | Call |
 |---|---|---|
 | Take order | customer state `SEATED` and `getOrder() == null` | `item = customer.chooseItem(menu)`, `order = new Order(customer.getId(), customer, item, customer.billFor(item), turn)`, `customer.attachOrder(order)` |
 | Serve | `order.canServe(turn)` | `order.markServed(turn)` then `customer.startEating(turn)` |
-| Chef: advance | order status `PLACED` or `PREPARING` | `order.advanceCookUnit(turn)` (becomes READY on its last unit) |
+| Chef: advance | order status `PLACED` or `PREPARING` | `order.advanceOneUnit(turn)` (becomes READY on its last unit) |
 | Eating | every turn, before the Cashier acts | `customer.finishEating(turn)` |
 | Cashier: collect | `customer.canPay(turn)` | `customer.markPaid()`, then add `order.getBillCents()` to revenue |
 
@@ -82,7 +81,7 @@ Read-only getters for the start-of-turn display: `getId()`, `getSatisfaction()`,
 
 ## 4. Verified behaviour
 
-The Person A files compile together with `Table.java` (`javac` on all files except `Restaurant.java`). `Restaurant.java` and the missing classes (`ActionResult`, `ScoreBoard`) still need their owners' changes before the whole project builds. The refactored timing was not re-run against the Section 3.3 Pasta example; with the new rules it should give READY on turn 3, served turn 4, READY_TO_PAY turn 5, payable turn 6.
+The model files compiled together, with temporary `ActionResult` and `ScoreBoard` stubs kept outside the repo. The real `ActionResult` and `ScoreBoard` classes do not exist yet, so the project will not build until their owners add them. The refactored timing was not re-run against the Section 3.3 Pasta example; with the new rules it should give READY on turn 3, served turn 4, READY_TO_PAY turn 5, payable turn 6.
 
 ## 5. Known limitations and open items
 

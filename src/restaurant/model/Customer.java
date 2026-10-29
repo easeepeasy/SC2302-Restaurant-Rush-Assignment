@@ -39,10 +39,13 @@ public abstract class Customer {
     }
 
     // Each customer type determines how much satisfaction it loses per turn.
-    protected abstract int waitingPenalty();
+    public abstract int waitingPenalty();
 
-    // Each customer type decides which menu item it orders.
-    public abstract MenuItem chooseItem(Menu menu);
+    // Customers choose food based on their ID so the results are consistent.
+    // The modulo operator cycles through the menu items. Subclasses can override this.
+    public MenuItem chooseItem(Menu menu) {
+        return menu.itemAt((id - 1) % menu.listItems().size());
+    }
 
     // Returns the bill for an item. Subclasses can override this to apply discounts.
     public int billFor(MenuItem item) {
