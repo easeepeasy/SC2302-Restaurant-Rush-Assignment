@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Represents a regular customer who loses 8 satisfaction points per waiting turn.
 public class RegularCustomer extends Customer {
     private static final int WAITING_PENALTY = 8;
@@ -11,8 +13,9 @@ public class RegularCustomer extends Customer {
         return WAITING_PENALTY;
     }
 
+    // Regular customers use the default choice: cycle through the menu by customer ID.
     @Override
-    public String getTypeName() {
-        return "Regular";
+    public MenuItem chooseItem(Menu menu) {
+        return super.chooseItem(menu);
     }
 }

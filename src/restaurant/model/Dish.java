@@ -1,3 +1,5 @@
+package restaurant.model;
+
 // Represents a dish on the menu with a fixed price and preparation time.
 public class Dish implements MenuItem {
     private final String name;
@@ -32,7 +34,7 @@ public class Dish implements MenuItem {
     // Displays the dish name, price and number of preparation units.
     @Override
     public String toString() {
-        return name + " (" + Money.format(priceCents) + ", " + prepUnits + " unit"
+        return name + " (" + String.format("$%d.%02d", priceCents / 100, priceCents % 100) + ", " + prepUnits + " unit"
                 + (prepUnits == 1 ? "" : "s") + ")";
     }
 }
