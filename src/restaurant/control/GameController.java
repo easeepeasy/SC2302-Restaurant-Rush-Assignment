@@ -44,9 +44,9 @@ public class GameController {
                 10, CustomerType.REGULAR,
                 13, CustomerType.REGULAR,
                 16, CustomerType.REGULAR));
-        waiter = new Waiter(restaurant);
-        chef = new Chef(restaurant);
-        cashier = new Cashier(restaurant);
+        waiter = new Waiter();
+        chef = new Chef();
+        cashier = new Cashier();
     }
 
     // Plays all turns (no early ending), then shows Victory or Defeat.
@@ -63,9 +63,10 @@ public class GameController {
         arrivals.customerAt(turn).ifPresent(restaurant::enqueue);
 
         // Start of turn: fresh tasks for the staff, then show the state
-        waiter.startTurn();
-        chef.startTurn();
-        cli.showState(restaurant, turn, List.of(waiter, chef));
+        waiter.resetForTurn();
+        chef.resetForTurn();
+        cashier.resetForTurn();
+        cli.showState(restaurant, turn, List.of(waiter, chef, cashier));
 
         // Steps 2-3: manager choices, Waiter before Chef.
         // An invalid choice shows why and asks again without using up the task.
@@ -83,7 +84,7 @@ public class GameController {
 
         // Step 4: eating, then automatic payment by the Cashier
         restaurant.finishEating(turn);
-        cashier.collectPayment(turn);
+        cashier.collectOldest(restaurant, turn);
 
         // Step 5: waiting customers lose satisfaction; anyone at 0 leaves
         restaurant.applyWaitingPenalties();
@@ -93,20 +94,22 @@ public class GameController {
     private ActionResult processWaiterChoice(WaiterChoice choice, int turn) {
         switch (choice.getAction()) {
             case SEAT:
-                return waiter.seat(choice.getCustomerId(), choice.getTableId());
+                return waiter.seat(choice.getCustomerId(), choice.getTableId(), restaurant);
             case TAKE_ORDER:
-                return waiter.takeOrder(choice.getCustomerId(), menu, turn);
+                return waiter.takeOrder(choice.getCustomerId(), restaurant, menu, turn);
             case SERVE:
-                return waiter.serve(choice.getOrderId(), turn);
+                return waiter.serve(choice.getOrderId(), restaurant, turn);
             default:
-                return waiter.waitTurn();
+                waiter.waitTurn();
+                return ActionResult.ok("Waiter waits.");
         }
     }
 
     private ActionResult processChefChoice(ChefChoice choice, int turn) {
         if (choice.isWait()) {
-            return chef.waitTurn();
+            chef.waitTurn();
+            return ActionResult.ok("Chef waits.");
         }
-        return chef.cook(choice.getOrderId(), turn);
+        return chef.prepare(choice.getOrderId(), restaurant, turn);
     }
 }
