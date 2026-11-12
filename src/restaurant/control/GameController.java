@@ -1,10 +1,12 @@
 package restaurant.control;
 
 import java.util.List;
+import java.util.Map;
 
 import restaurant.model.ActionResult;
 import restaurant.model.Cashier;
 import restaurant.model.Chef;
+import restaurant.model.CustomerType;
 import restaurant.model.Dish;
 import restaurant.model.GameConfig;
 import restaurant.model.Menu;
@@ -35,7 +37,13 @@ public class GameController {
                 new Dish("Salad", 900, 1),
                 new Dish("Burger", 1500, 1),
                 new Dish("Pasta", 1800, 2)));
-        arrivals = new ArrivalSchedule(config.ARRIVAL_TURNS);
+        arrivals = new ArrivalSchedule(Map.of(
+                1, CustomerType.REGULAR,
+                4, CustomerType.VIP,
+                7, CustomerType.CRITIC,
+                10, CustomerType.REGULAR,
+                13, CustomerType.REGULAR,
+                16, CustomerType.REGULAR));
         waiter = new Waiter(restaurant);
         chef = new Chef(restaurant);
         cashier = new Cashier(restaurant);
