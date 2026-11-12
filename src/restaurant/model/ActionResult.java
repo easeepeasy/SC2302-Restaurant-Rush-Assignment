@@ -1,17 +1,17 @@
 package restaurant.model;
 
 // The outcome of an attempted action: whether it worked, plus a message for the manager.
-// Staff and Restaurant return this instead of throwing, so the UI can show the reason
+// Staff members and Restaurant return this instead of throwing, so the UI can show the reason
 // and let the manager choose again.
-public final class ActionResult {
+public class ActionResult {
 
-    private final boolean successful;
-    private final String returnMessage;
+    private final boolean success;
+    private final String message;
 
     // Private so results can only be made through ok() and fail(), which read more clearly.
     private ActionResult(boolean success, String message) {
-        successful = success;
-        returnMessage = message;
+        this.success = success;
+        this.message = message;
     }
 
     // Creates a successful result with a message description of the action.
@@ -25,15 +25,10 @@ public final class ActionResult {
     }
 
     public boolean isSuccess() {
-        return successful;
+        return success;
     }
 
     public String getMessage() {
-        return returnMessage;
-    }
-
-    @Override //Java check to make sure you are overriding from parent class
-    public String toString() {
-        return returnMessage;
+        return message;
     }
 }

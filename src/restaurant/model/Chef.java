@@ -2,17 +2,18 @@ package restaurant.model;
 
 // The Chef completes one preparation unit per turn on one order.
 // It only advances units, so it does not need to know which dish it is cooking.
-public class Chef extends Staff {
+public class Chef extends StaffMember {
 
-    public Chef(Restaurant restaurant) {
-        super("Chef", restaurant);
-    }
-
-    // Advances an order by one unit. The order becomes READY on its last unit
-    public ActionResult cook(int orderId, int turn) {
-        if (hasActed()) {
-            return alreadyActed();
+    // Advances an order by one unit. The order becomes READY on its last unit.
+    public ActionResult prepare(int orderId, Restaurant restaurant, int turn) {
+        if (!isAvailable()) {
+            return ActionResult.fail("Chef has already acted this turn.");
         }
-        return useTaskIfSuccessful(getRestaurant().prepareOrder(orderId, turn));
+
+        ActionResult result = restaurant.prepareOrder(orderId, turn);
+        if (result.isSuccess()) {
+            consumeTask();
+        }
+        return result;
     }
 }

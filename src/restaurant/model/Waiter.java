@@ -2,33 +2,36 @@ package restaurant.model;
 
 // The Waiter does one task per turn: either seat a customer, take an order, or serve a READY dish.
 // The GameController lets the Waiter act before the Chef.
-public class Waiter extends Staff {
+public class Waiter extends StaffMember {
 
-    public Waiter(Restaurant restaurant) {
-        super("Waiter", restaurant);
+    // Seats a queued customer at a free table.
+    public ActionResult seat(int customerId, int tableId, Restaurant restaurant) {
+        if (!isAvailable()) {
+            return ActionResult.fail("Waiter has already acted this turn.");
+        }
+        return completeIfSuccessful(restaurant.seatCustomer(customerId, tableId));
     }
 
-    // Seats a queued customer at a free table
-    public ActionResult seat(int customerId, int tableId) {
-        if (hasActed()) {
-            return alreadyActed();
+    // Takes a seated customer's order. The customer chooses the dish.
+    public ActionResult takeOrder(int customerId, Restaurant restaurant, Menu menu, int turn) {
+        if (!isAvailable()) {
+            return ActionResult.fail("Waiter has already acted this turn.");
         }
-        return useTaskIfSuccessful(getRestaurant().seatCustomer(customerId, tableId));
+        return completeIfSuccessful(restaurant.placeOrder(customerId, menu, turn));
     }
 
-    // Takes a seated customer's order. The customer chooses the dish
-    public ActionResult takeOrder(int customerId, Menu menu, int turn) {
-        if (hasActed()) {
-            return alreadyActed();
+    // Serves an order that was already READY before the current turn.
+    public ActionResult serve(int orderId, Restaurant restaurant, int turn) {
+        if (!isAvailable()) {
+            return ActionResult.fail("Waiter has already acted this turn.");
         }
-        return useTaskIfSuccessful(getRestaurant().placeOrder(customerId, menu, turn));
+        return completeIfSuccessful(restaurant.serveOrder(orderId, turn));
     }
 
-    // Serves an order that was already READY before the current turn
-    public ActionResult serve(int orderId, int turn) {
-        if (hasActed()) {
-            return alreadyActed();
+    private ActionResult completeIfSuccessful(ActionResult result) {
+        if (result.isSuccess()) {
+            consumeTask();
         }
-        return useTaskIfSuccessful(getRestaurant().serveOrder(orderId, turn));
+        return result;
     }
 }
