@@ -228,7 +228,7 @@ Each comparison explains what changed between stages, why those changes were nee
 
 | Member | Branch | AI history |
 |---|---|---|
-| | | |
+| Levine | [`levine`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/levine) | [`ai-history`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/levine/ai-history) |
 | | | |
 | | | |
 | | | |
