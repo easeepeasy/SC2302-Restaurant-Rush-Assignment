@@ -1,6 +1,7 @@
 package restaurant.control;
 
 import java.util.List;
+import java.util.Set;
 
 import restaurant.model.ActionResult;
 import restaurant.model.Cashier;
@@ -35,7 +36,7 @@ public class GameController {
                 new Dish("Salad", 900, 1),
                 new Dish("Burger", 1500, 1),
                 new Dish("Pasta", 1800, 2)));
-        arrivals = new ArrivalSchedule(config.ARRIVAL_TURNS);
+        arrivals = new ArrivalSchedule(Set.of(1, 4, 7, 10, 13, 16));
         waiter = new Waiter();
         chef = new Chef();
         cashier = new Cashier();
@@ -47,7 +48,7 @@ public class GameController {
             runTurn(turn);
         }
         ScoreBoard score = restaurant.getScoreBoard();
-        cli.showResult(score.evaluate(config), score);
+        cli.showResult(score.evaluate(config), score, config.MAX_TURNS);
     }
 
     private void runTurn(int turn) {

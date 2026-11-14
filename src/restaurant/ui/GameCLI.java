@@ -7,8 +7,8 @@ import java.util.Scanner;
 
 import restaurant.control.ChefChoice;
 import restaurant.control.WaiterChoice;
+import restaurant.control.WaiterAction;
 import restaurant.model.Customer;
-import restaurant.model.GameConfig;
 import restaurant.model.GameResult;
 import restaurant.model.Order;
 import restaurant.model.Restaurant;
@@ -84,13 +84,13 @@ public class GameCLI {
                 case 1:
                     int customerId = readInt("Customer ID: ");
                     int tableId = readInt("Table ID: ");
-                    return WaiterChoice.seat(customerId, tableId);
+                    return new WaiterChoice(WaiterAction.SEAT, customerId, tableId, -1);
                 case 2:
-                    return WaiterChoice.takeOrder(readInt("Customer ID: "));
+                    return new WaiterChoice(WaiterAction.TAKE_ORDER, readInt("Customer ID: "), -1, -1);
                 case 3:
-                    return WaiterChoice.serve(readInt("Order ID: "));
+                    return new WaiterChoice(WaiterAction.SERVE, -1, -1, readInt("Order ID: "));
                 case 4:
-                    return WaiterChoice.waitTurn();
+                    return new WaiterChoice(WaiterAction.WAIT, -1, -1, -1);
                 default:
                     showError("Choose an option from 1 to 4.");
             }
@@ -106,7 +106,7 @@ public class GameCLI {
             int action = readInt("Choose 1-2: ");
             switch (action) {
                 case 1:
-                    return ChefChoice.cook(readInt("Order ID: "));
+                    return ChefChoice.prepare(readInt("Order ID: "));
                 case 2:
                     return ChefChoice.waitTurn();
                 default:
@@ -120,7 +120,7 @@ public class GameCLI {
         System.out.println("Please try again. The staff task has not been used.");
     }
 
-    public void showResult(GameResult result, ScoreBoard score) {
+    public void showResult(GameResult result, ScoreBoard score, int turnsUsed) {
         System.out.println();
         System.out.println("========================================");
         System.out.println("            FINAL RESULT");
@@ -131,7 +131,7 @@ public class GameCLI {
         System.out.println("Unhappy departures: " + score.getUnhappyDepartures());
         System.out.println("Revenue: " + formatMoney(score.getRevenueCents()));
         System.out.println("Average paid satisfaction: " + formatAverage(score.averagePaidSatisfaction()));
-        System.out.println("Turns used: " + GameConfig.base().MAX_TURNS);
+        System.out.println("Turns used: " + turnsUsed);
         System.out.println("========================================");
     }
 
