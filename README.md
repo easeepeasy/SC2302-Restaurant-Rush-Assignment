@@ -107,6 +107,77 @@ Customers 1 and 2 wait until their satisfaction reaches 0 and leave on turns 13 
 
 ## Stage 2 test notes
 
+Check out `stage-2`, compile it, and paste each command in the folder where you compiled `out`.
+
+The six arrivals are customer 1 (Regular, turn 1), customer 2 (VIP, turn 4), customer 3 (Critic, turn 7), and customers 4, 5 and 6 (Regular, turns 10, 13 and 16). Regular and VIP customers choose food by customer ID. A Critic always chooses the most expensive menu item, which is Pasta in the base menu.
+
+### Victory run
+
+Paste into terminal:
+
+```bash
+printf '%s\n' 1 1 1 2 2 1 1 1 3 1 2 1 2 2 2 2 2 1 2 3 2 2 1 3 1 2 2 3 1 3 4 1 3 3 3 2 1 4 2 2 2 4 1 4 3 4 2 4 2 4 2 4 2 4 2 4 2 | java -cp out restaurant.Main
+```
+
+| Turn | Waiter | Chef |
+|---|---|---|
+| 1 | Seat Regular customer 1 at table 1 | Wait |
+| 2 | Take order from customer 1 (Salad) | Prepare order 1 |
+| 3 | Serve order 1 | Wait |
+| 4 | Seat VIP customer 2 at table 2 | Wait |
+| 5 | Take order from customer 2 (Burger, 10% off) | Prepare order 2 |
+| 6 | Serve order 2 | Wait |
+| 7 | Seat Critic customer 3 at table 1 | Wait |
+| 8 | Take order from customer 3 (Pasta, most expensive item) | Prepare order 3 (unit 1 of 2) |
+| 9 | Wait | Prepare order 3 (unit 2 of 2) |
+| 10 | Serve order 3 | Wait |
+| 11 | Seat Regular customer 4 at table 2 | Wait |
+| 12 | Take order from customer 4 (Salad) | Prepare order 4 |
+| 13 | Serve order 4 | Wait |
+| 14 to 18 | Wait | Wait |
+
+Expected final result:
+
+```
+VICTORY!
+Served customers: 4
+Paid customers: 4
+Unhappy departures: 0
+Revenue: $49.50
+Average paid satisfaction: 78.5
+Turns used: 18
+```
+
+Customers 1, 2, 3 and 4 pay automatically through the Cashier on turns 5, 8, 12 and 15. Revenue is $9.00 + $13.50 + $18.00 + $9.00 = $49.50. The VIP pays 90% of the Burger's $15.00 price. Their satisfaction when they pay is 84, 90, 64 and 76, so the average is 78.5.
+
+### Defeat run
+
+Paste into terminal:
+
+```bash
+for i in $(seq 18); do printf '4\n2\n'; done | java -cp out restaurant.Main
+```
+
+Expected final result:
+
+```
+DEFEAT!
+Served customers: 0
+Paid customers: 0
+Unhappy departures: 2
+Revenue: $0.00
+Average paid satisfaction: N/A
+Turns used: 18
+```
+
+Regular customer 1 leaves on turn 13 and Critic customer 3 leaves on turn 15. No unpaid or abandoned order contributes to revenue.
+
+### Rule checks
+
+- Unserved waiting or seated Regular, VIP and Critic customers lose 8, 5 and 12 satisfaction per turn respectively, with a minimum of 0.
+- A VIP receives 10% off the chosen item's price and keeps the ID-based food choice. A Critic pays full price and always chooses the most expensive menu item, keeping the first one in menu order if prices tie.
+- All other rules are the same as Stage 1.
+
 ## Stage 3 test notes
 
 ## Stage comparisons
