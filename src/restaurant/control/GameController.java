@@ -5,6 +5,7 @@ import java.util.Map;
 import restaurant.model.ActionResult;
 import restaurant.model.Cashier;
 import restaurant.model.Chef;
+import restaurant.model.ComboMeal;
 import restaurant.model.CustomerType;
 import restaurant.model.Dish;
 import restaurant.model.GameConfig;
@@ -32,10 +33,14 @@ public class GameController {
         this.config = config;
         cli = new GameCLI();
         restaurant = new Restaurant(config.TABLE_COUNT);
+        Dish salad = new Dish("Salad", 900, 1);
+        Dish burger = new Dish("Burger", 1500, 1);
+        Dish pasta = new Dish("Pasta", 1800, 2);
         menu = new Menu(List.of(
-                new Dish("Salad", 900, 1),
-                new Dish("Burger", 1500, 1),
-                new Dish("Pasta", 1800, 2)));
+                salad,
+                burger,
+                pasta,
+                new ComboMeal(salad, pasta)));
         arrivals = new ArrivalSchedule(Map.of(
                 1, CustomerType.REGULAR,
                 4, CustomerType.VIP,
