@@ -182,11 +182,25 @@ Regular customer 1 leaves on turn 13 and Critic customer 3 leaves on turn 15. No
 
 ## Stage comparisons
 
-For each transition: the new files, the existing files changed or deleted and why, what still works, and a link to the commit comparison.
-
+Each comparison explains what changed between stages, why those changes were needed, and how existing game behavior was preserved.
 ### Stage 1 to Stage 2
 
+[Compare `stage-1` and `stage-2`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/compare/stage-1...stage-2)
 
+**New files**
+- `VIPCustomer.java`: loses 5 satisfaction per waiting turn and gets 10% off by overriding `waitingPenalty()` and `billFor()`.
+- `CriticCustomer.java`: loses 12 satisfaction per waiting turn and always orders the most expensive item by overriding `waitingPenalty()` and `chooseItem()`.
+- `CustomerType.java`: enum (`REGULAR`, `VIP`, `CRITIC`) that tells the arrival schedule which customer to create.
+
+**Changed files**
+- `ArrivalSchedule.java`: takes a map of arrival turn to customer type instead of a set of turns, and creates the matching customer. It centralizes the creation of Regular, VIP and Critic customers.
+- `GameController.java`: the arrival setup now passes the customer type for each of the six turns. No game rules changed.
+
+**Deleted files:** none.
+
+**What still works**
+- `Customer`, `Restaurant`, `Order`, the staff classes and `GameCLI` are unchanged, because VIP and Critic only add subclasses.
+- The Stage 1 defeat run gives the same result. The Stage 1 victory input still wins, with revenue of $49.50 and average satisfaction of 78.5 instead of $51.00 and 80.0. The VIP discount reduces revenue, while the VIP and Critic waiting penalties change the recorded satisfaction.
 
 ### Stage 2 to Stage 3
 
