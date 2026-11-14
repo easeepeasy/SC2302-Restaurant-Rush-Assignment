@@ -9,14 +9,14 @@ public final class ChefChoice {
     private final int orderId;
     private final boolean waiting;
 
-    // Private so choices can only be made through cook() and waitTurn().
+    // Private so choices can only be made through prepare() and waitTurn().
     private ChefChoice(int orderId, boolean waiting) {
         this.orderId = orderId;
         this.waiting = waiting;
     }
 
     // Advance this order by one preparation unit.
-    public static ChefChoice cook(int orderId) {
+    public static ChefChoice prepare(int orderId) {
         return new ChefChoice(orderId, false);
     }
 

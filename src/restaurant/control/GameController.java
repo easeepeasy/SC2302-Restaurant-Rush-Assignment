@@ -2,7 +2,6 @@ package restaurant.control;
 
 import java.util.List;
 import java.util.Map;
-
 import restaurant.model.ActionResult;
 import restaurant.model.Cashier;
 import restaurant.model.Chef;
@@ -55,7 +54,7 @@ public class GameController {
             runTurn(turn);
         }
         ScoreBoard score = restaurant.getScoreBoard();
-        cli.showResult(score.evaluate(config), score);
+        cli.showResult(score.evaluate(config), score, config.MAX_TURNS);
     }
 
     private void runTurn(int turn) {

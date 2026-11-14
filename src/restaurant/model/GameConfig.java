@@ -7,8 +7,8 @@ public class GameConfig {
     public final int TARGET_REVENUE_CENTS;
     public final int TARGET_AVG_SAT;
 
-    private GameConfig(int maxTurns, int tableCount, int targetPaid, int targetRevenueCents,
-                       int targetAvgSat) {
+    private GameConfig(int maxTurns, int tableCount, int targetPaid,
+                       int targetRevenueCents, int targetAvgSat) {
         MAX_TURNS = maxTurns;
         TABLE_COUNT = tableCount;
         TARGET_PAID = targetPaid;
