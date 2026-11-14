@@ -65,6 +65,15 @@ public class GameController {
         waiter.resetForTurn();
         chef.resetForTurn();
         cashier.resetForTurn();
+
+        // Happy Hour: the manager may switch it on once per game, at the start of a turn.
+        // While it is active, waiting customers recover satisfaction at turn start.
+        ActionResult happyHourResult = processHappyHour(turn);
+        if (!happyHourResult.isSuccess()) {
+            cli.showError(happyHourResult.getMessage());
+        }
+        restaurant.applyHappyHourRecovery(turn);
+
         cli.showState(restaurant, turn, List.of(waiter, chef, cashier));
 
         // Steps 2-3: manager choices, Waiter before Chef.
@@ -102,6 +111,14 @@ public class GameController {
                 waiter.waitTurn();
                 return ActionResult.ok("Waiter waits.");
         }
+    }
+
+    // Asks the manager only while Happy Hour is still unused.
+    private ActionResult processHappyHour(int turn) {
+        if (restaurant.getHappyHour().isUsed() || !cli.askHappyHour()) {
+            return ActionResult.ok("Happy Hour not activated.");
+        }
+        return restaurant.activateHappyHour(turn);
     }
 
     private ActionResult processChefChoice(ChefChoice choice, int turn) {

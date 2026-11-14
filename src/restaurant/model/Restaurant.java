@@ -12,6 +12,7 @@ public class Restaurant {
     private final List<Order> activeOrders = new ArrayList<>();
     private final List<Table> tables = new ArrayList<>();
     private final ScoreBoard scoreBoard = new ScoreBoard();
+    private final HappyHour happyHour = new HappyHour();
     public Restaurant(int tableCount) {
         for (int i = 1; i <= tableCount; i++){
             tables.add(new Table(i));
@@ -54,7 +55,9 @@ public class Restaurant {
             return ActionResult.fail("Customer #" + customerId + " has already ordered.");
         }
         MenuItem item = customer.chooseItem(menu);
-        Order order = new Order(customerId, customer, item, customer.billFor(item), turn);
+        // The customer's own price first (e.g. VIP discount), then Happy Hour. Locked into the Order.
+        int billCents = happyHour.discount(customer.billFor(item), turn);
+        Order order = new Order(customerId, customer, item, billCents, turn);
         customer.attachOrder(order);
         activeOrders.add(order);
         return ActionResult.ok("Took order from Customer #" + customerId + ": " + order + ".");
@@ -115,6 +118,20 @@ public class Restaurant {
         activeOrders.remove(order);
         return ActionResult.ok("Customer #" + oldest.getId() + " paid " + String.format("$%d.%02d", order.getBillCents() / 100, order.getBillCents() % 100) + ".");
     }
+    public ActionResult activateHappyHour(int turn){
+        return happyHour.activate(turn);
+    }
+    // At turn start while Happy Hour is active, customers still waiting for a table or food recover.
+    public void applyHappyHourRecovery(int turn){
+        if (!happyHour.isActive(turn)){
+            return;
+        }
+        for (Customer c : customers){
+            if (c.getState() == CustomerState.WAITING || c.getState() == CustomerState.SEATED){
+                c.recoverSatisfaction(happyHour.getRecoveryPoints());
+            }
+        }
+    }
     public void applyWaitingPenalties() {
         List<Customer> leaving = new ArrayList<>();
         for (Customer c : customers){
@@ -140,6 +157,9 @@ public class Restaurant {
     }
     public ScoreBoard getScoreBoard(){
         return scoreBoard;
+    }
+    public HappyHour getHappyHour(){
+        return happyHour;
     }
     private void removeUnhappyCustomer(Customer c){
         waitingQueue.remove(c);

@@ -10,6 +10,7 @@ import restaurant.control.WaiterChoice;
 import restaurant.control.WaiterAction;
 import restaurant.model.Customer;
 import restaurant.model.GameResult;
+import restaurant.model.HappyHour;
 import restaurant.model.Order;
 import restaurant.model.Restaurant;
 import restaurant.model.ScoreBoard;
@@ -32,6 +33,7 @@ public class GameCLI {
         System.out.println("Revenue: " + formatMoney(score.getRevenueCents()));
         System.out.println("Paid customers: " + score.getPaidCount());
         System.out.println("Average paid satisfaction: " + formatAverage(score.averagePaidSatisfaction()));
+        System.out.println("Happy Hour: " + describeHappyHour(restaurant.getHappyHour(), turn));
 
         System.out.println("\nWaiting queue (arrival order):");
         List<Customer> waiting = restaurant.getWaitingQueue();
@@ -115,6 +117,24 @@ public class GameCLI {
         }
     }
 
+    // Asked at the start of a turn while Happy Hour has not been used yet.
+    public boolean askHappyHour() {
+        System.out.println("\nActivate Happy Hour now? It can be used once and lasts this turn and the next.");
+        System.out.println("  1. Yes");
+        System.out.println("  2. No");
+
+        while (true) {
+            int answer = readInt("Choose 1-2: ");
+            if (answer == 1) {
+                return true;
+            }
+            if (answer == 2) {
+                return false;
+            }
+            showError("Choose an option from 1 to 2.");
+        }
+    }
+
     public void showError(String message) {
         System.out.println("Invalid action: " + message);
         System.out.println("Please try again. The staff task has not been used.");
@@ -164,6 +184,14 @@ public class GameCLI {
             return "unknown";
         }
         return staff.get(index).isAvailable() ? "available" : "busy";
+    }
+
+    private String describeHappyHour(HappyHour happyHour, int turn) {
+        if (happyHour.isActive(turn)) {
+            int left = happyHour.remainingTurns(turn);
+            return "ACTIVE (" + left + " turn" + (left == 1 ? "" : "s") + " left, including this one)";
+        }
+        return happyHour.isUsed() ? "used" : "available";
     }
 
     private String formatMoney(int cents) {

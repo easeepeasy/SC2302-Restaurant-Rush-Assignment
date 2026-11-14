@@ -103,6 +103,11 @@ public abstract class Customer {
         satisfaction = Math.max(0, satisfaction - points);
     }
 
+    // Raises satisfaction but does not allow it to go above 100.
+    public void recoverSatisfaction(int points) {
+        satisfaction = Math.min(MAX_SATISFACTION, satisfaction + points);
+    }
+
     public boolean isSatisfied() {
         return satisfaction > 0;
     }
