@@ -13,6 +13,8 @@ A Java command-line, turn-based restaurant management game for SC2302. You are t
 | 2 | VIP and Critic customers | [`stage-2`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/stage-2) | `stage-02` |
 | 3 | Host, ComboMeal, Happy Hour | [`stage-3`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/stage-3) | `stage-03` |
 
+The tags identify the finalised, independently runnable versions of each stage. The `main` branch contains the final Stage 3 Java implementation together with the README and diagrams.
+
 ## Build and run
 
 Replace `stage-1` with `stage-2` or `stage-3` to run another stage.
@@ -25,22 +27,30 @@ javac -d out $(find src -name "*.java")
 java -cp out restaurant.Main
 ```
 
+When switching between stage tags, delete the previous compiled classes and rebuild to prevent stale classes from another stage being used:
+
+```bash
+git checkout stage-2      # or stage-1 / stage-3
+rm -rf out
+javac -d out $(find src -name "*.java")
+java -cp out restaurant.Main
+```
+
 ## How to play
 
 - **Waiter** (one task per turn): `1` seat a waiting customer (asks for customer ID and table ID), `2` take a seated customer's order (customer ID), `3` serve a READY order (order ID), `4` wait.
 - **Chef** (one preparation unit per turn): `1` prepare an order (order ID), `2` wait.
 - **Cashier** acts automatically: it collects at most one eligible payment per turn, oldest first.
 
-An invalid choice shows the reason and asks again, and the staff task is not used up. Order ID equals the ID of the customer who placed it. Customers choose their own food by a fixed rule: customer ID 1, 2, 3, 4, 5, 6 orders Salad, Burger, Pasta, Salad, Burger, Pasta.
+An invalid choice shows the reason and asks again, and the staff task is not used up. The updated CLI shows eligible customers, tables and orders for the relevant actions, and announces successful actions and payments. Order ID equals the ID of the customer who placed it. Customers choose their own food by a fixed rule: customer ID 1, 2, 3, 4, 5, 6 orders Salad, Burger, Pasta, Salad, Burger, Pasta in Stages 1 and 2; see Stage 3 notes for the expanded menu.
 
 The game always runs 18 turns. Customers arrive at the start of turns 1, 4, 7, 10, 13 and 16, and there are 2 tables. You win if, at the end of turn 18, at least 4 customers have paid, revenue is at least $45.00, and the average satisfaction of paid customers is at least 60.
 
 ## Stage 1 test notes
 
-Paste each command into the terminal, in the folder where you compiled `out`. It plays all 18 turns automatically, so you don't need to type any choices.
+Check out the final `stage-1` tag and compile it using the instructions above. Paste each command into the terminal in the repository folder. It supplies the choices for all 18 turns automatically, so you do not need to type them manually. The updated CLI prints eligible actions and successful-action messages, but the numeric choices remain the same.
 
 ### Victory run
-
 
 ```bash
 printf '%s\n' 1 1 1 2 2 1 1 1 3 1 2 1 2 2 2 2 2 1 2 3 2 2 1 3 1 2 2 3 1 3 4 1 3 3 3 2 1 4 2 2 2 4 1 4 3 4 2 4 2 4 2 4 2 4 2 4 2 | java -cp out restaurant.Main
@@ -79,7 +89,6 @@ Customers 1, 2, 3 and 4 pay on turns 5, 8, 12 and 15. Revenue is $9.00 + $15.00 
 
 ### Defeat run
 
-
 ```bash
 for i in $(seq 18); do printf '4\n2\n'; done | java -cp out restaurant.Main
 ```
@@ -107,7 +116,7 @@ Customers 1 and 2 wait until their satisfaction reaches 0 and leave on turns 13 
 
 ## Stage 2 test notes
 
-Check out `stage-2`, compile it, and paste each command in the folder where you compiled `out`.
+Check out the final `stage-2` tag, delete the previous `out` folder, and compile it. Paste each command in the repository folder. As with Stage 1, the revised CLI displays eligible targets and action feedback without changing the numeric menu options.
 
 The six arrivals are customer 1 (Regular, turn 1), customer 2 (VIP, turn 4), customer 3 (Critic, turn 7), and customers 4, 5 and 6 (Regular, turns 10, 13 and 16). Regular and VIP customers choose food by customer ID. A Critic always chooses the most expensive menu item, which is Pasta in the base menu.
 
@@ -180,9 +189,7 @@ Regular customer 1 leaves on turn 13 and Critic customer 3 leaves on turn 15. No
 
 ## Stage 3 test notes
 
-Check out `stage-3`, compile it, and paste each command in the folder where you compiled `out`.
-
-Stage 3 asks for a Host choice every turn, and for a Happy Hour answer at the start of each turn until Happy Hour has been used, so the inputs differ from Stages 1 and 2. Each turn's input order is: Happy Hour (1 for yes, 2 for no, only while unused), Host, Waiter, Chef. The arrivals are the same as in Stage 2. The Salad and Pasta combo ($24.30, 3 preparation units) is the fourth menu item, so the ID rule gives customers 1 to 6 Salad, Burger, Pasta, Combo, Salad, Burger. The Critic always chooses the most expensive item, which is now the combo.
+Check out the final `stage-3` tag, delete the previous `out` folder, and compile it. Paste each command in the repository folder. Stage 3 asks for a Host choice every turn, and for a Happy Hour answer at the start of each turn until Happy Hour has been used, so the inputs differ from Stages 1 and 2. Each turn's input order is: Happy Hour (1 for yes, 2 for no, only while unused), Host, Waiter, Chef. The arrivals are the same as in Stage 2. The Salad and Pasta combo ($24.30, 3 preparation units) is the fourth menu item, so the ID rule gives customers 1 to 6 Salad, Burger, Pasta, Combo, Salad, Burger. The Critic always chooses the most expensive item, which is now the combo.
 
 ### Victory run
 
@@ -261,6 +268,9 @@ Regular customer 1 leaves on turn 13 and Critic customer 3 leaves on turn 15. No
 ## Stage comparisons
 
 Each comparison explains what changed between stages, why those changes were needed, and how existing game behavior was preserved.
+
+**Reading the GitHub comparisons:** Each stage was finalised on its own branch before the final tags were updated. Some shared CLI and choice-handling improvements were applied separately to all three stage branches. As a result, GitHub's three-dot compare pages show changes since a common ancestor, including changes to `GameCLI.java` and `WaiterChoice.java` that are already present in both final tagged versions. To compare the *actual final source snapshots*, use `git diff stage-1 stage-2 -- src/` or `git diff stage-2 stage-3 -- src/`. The final tagged versions are the authoritative stage snapshots.
+
 ### Stage 1 to Stage 2
 
 [Compare `stage-1` and `stage-2`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/compare/stage-1...stage-2)
@@ -277,7 +287,7 @@ Each comparison explains what changed between stages, why those changes were nee
 **Deleted files:** none.
 
 **What still works**
-- `Customer`, `Restaurant`, `Order`, the staff classes and `GameCLI` are unchanged, because VIP and Critic only add subclasses.
+- `Customer`, `Restaurant`, `Order`, the staff classes and `GameCLI` are unchanged between the final tagged snapshots, because VIP and Critic only add subclasses. The shared CLI and `WaiterChoice` improvements are present in both tags.
 - The Stage 1 defeat run gives the same result. The Stage 1 victory input still wins, with revenue of $49.50 and average satisfaction of 78.5 instead of $51.00 and 80.0. The VIP discount reduces revenue, while the VIP and Critic waiting penalties change the recorded satisfaction.
 
 ### Stage 2 to Stage 3
@@ -299,7 +309,7 @@ Each comparison explains what changed between stages, why those changes were nee
 **Deleted files:** none.
 
 **What still works**
-- `Order`, `Menu`, `Dish`, the customer subclasses, `ScoreBoard`, `Waiter`, `Chef` and `Cashier` are unchanged, because the combo plugs into the `MenuItem` interface and the Host reuses the existing seating operation.
+- `Order`, `Menu`, `Dish`, the customer subclasses, `ScoreBoard`, `Waiter`, `Chef`, `Cashier` and `WaiterChoice` are unchanged between the final tagged snapshots, because the combo plugs into the `MenuItem` interface and the Host reuses the existing seating operation.
 - The Stage 2 customer behaviours still apply (waiting penalties of 8, 5 and 12 and the VIP discount), and the all-wait defeat run still gives 0 paid and 2 unhappy departures.
 - The Stage 1 and Stage 2 victory inputs no longer work as written, because every turn now asks for a Host choice and, until it is used, a Happy Hour answer. The combo is also the fourth menu item, so the ID rule gives customer 4 the combo and customer 5 Salad, and the Critic chooses the combo as the most expensive item.
 
@@ -321,6 +331,7 @@ Each comparison explains what changed between stages, why those changes were nee
 | | | |
 | | | |
 | | | |
+| | | |
 
 ## Members and AI history
 
@@ -331,4 +342,3 @@ Each comparison explains what changed between stages, why those changes were nee
 | | | |
 | | | |
 | | | |
-
