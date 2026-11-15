@@ -180,6 +180,84 @@ Regular customer 1 leaves on turn 13 and Critic customer 3 leaves on turn 15. No
 
 ## Stage 3 test notes
 
+Check out `stage-3`, compile it, and paste each command in the folder where you compiled `out`.
+
+Stage 3 asks for a Host choice every turn, and for a Happy Hour answer at the start of each turn until Happy Hour has been used, so the inputs differ from Stages 1 and 2. Each turn's input order is: Happy Hour (1 for yes, 2 for no, only while unused), Host, Waiter, Chef. The arrivals are the same as in Stage 2. The Salad and Pasta combo ($24.30, 3 preparation units) is the fourth menu item, so the ID rule gives customers 1 to 6 Salad, Burger, Pasta, Combo, Salad, Burger. The Critic always chooses the most expensive item, which is now the combo.
+
+### Victory run
+
+Paste into terminal:
+
+```bash
+printf '%s\n' 2 1 1 1 2 1 1 1 2 2 3 1 2 2 2 4 2 1 1 2 2 2 2 1 2 2 3 2 2 2 4 2 1 3 1 2 3 1 3 2 4 1 3 2 4 1 3 1 4 2 3 3 2 2 2 4 1 4 2 4 1 4 1 5 1 2 5 1 4 2 3 4 1 5 2 3 5 2 2 4 2 2 4 2 2 4 2 | java -cp out restaurant.Main
+```
+
+| Turn | Happy Hour | Host | Waiter | Chef |
+|---|---|---|---|---|
+| 1 | No | Seat customer 1 at table 1 | Take order from customer 1 (Salad) | Prepare order 1 |
+| 2 | No | Wait | Serve order 1 | Wait |
+| 3 | No | Wait | Wait | Wait |
+| 4 | Yes | Seat VIP customer 2 at table 2 | Take order from customer 2 (Burger, $10.80) | Prepare order 2 |
+| 5 | Not asked | Wait | Serve order 2 | Wait |
+| 6 | Not asked | Wait | Wait | Wait |
+| 7 | Not asked | Seat Critic customer 3 at table 1 | Take order from customer 3 (Combo) | Prepare order 3 (unit 1 of 3) |
+| 8 | Not asked | Wait | Wait | Prepare order 3 (unit 2 of 3) |
+| 9 | Not asked | Wait | Wait | Prepare order 3 (unit 3 of 3) |
+| 10 | Not asked | Seat customer 4 at table 2 | Serve order 3 | Wait |
+| 11 | Not asked | Wait | Take order from customer 4 (Combo) | Prepare order 4 (unit 1 of 3) |
+| 12 | Not asked | Wait | Wait | Prepare order 4 (unit 2 of 3) |
+| 13 | Not asked | Seat customer 5 at table 1 | Take order from customer 5 (Salad) | Prepare order 4 (unit 3 of 3) |
+| 14 | Not asked | Wait | Serve order 4 | Prepare order 5 |
+| 15 | Not asked | Wait | Serve order 5 | Wait |
+| 16 to 18 | Not asked | Wait | Wait | Wait |
+
+Expected final result:
+
+```
+VICTORY!
+Served customers: 5
+Paid customers: 5
+Unhappy departures: 0
+Revenue: $77.40
+Average paid satisfaction: 81.6
+Turns used: 18
+```
+
+Customers 1 to 5 pay automatically through the Cashier on turns 4, 7, 12, 16 and 17. Revenue is $9.00 + $10.80 + $24.30 + $24.30 + $9.00 = $77.40. The Host and the Waiter both act on turns 1, 4, 7 and 13: the Host seats the arriving customer and the Waiter takes that customer's order in the same turn. Customer 2's Burger costs $10.80: the VIP discount takes $15.00 to $13.50, then Happy Hour takes it to $10.80. Happy Hour also gives customer 2 15 satisfaction at the start of turns 4 and 5, so it pays with 100. The satisfaction recorded for the five paying customers is 92, 100, 64, 68 and 84, so the average is 81.6.
+
+### Defeat run
+
+Paste into terminal:
+
+```bash
+for i in $(seq 18); do printf '2\n2\n4\n2\n'; done | java -cp out restaurant.Main
+```
+
+The answers each turn are No to Happy Hour, then Wait for the Host, the Waiter and the Chef.
+
+Expected final result:
+
+```
+DEFEAT!
+Served customers: 0
+Paid customers: 0
+Unhappy departures: 2
+Revenue: $0.00
+Average paid satisfaction: N/A
+Turns used: 18
+```
+
+Regular customer 1 leaves on turn 13 and Critic customer 3 leaves on turn 15. No unpaid or abandoned order contributes to revenue.
+
+### Rule checks
+
+- The Host seats at most one queued customer per turn in addition to the Waiter's task. A failed seating leaves the Host's task unused.
+- Happy Hour can be activated once per game and lasts the activation turn and the next. Its remaining duration is shown at the start of each turn.
+- The customer's own discount (the VIP's 10%) is applied first, then Happy Hour's 20%. The price is fixed when the order is taken, so earlier orders keep their bills.
+- While Happy Hour is active, customers still waiting for a table or food recover 15 satisfaction at the start of the turn, up to 100.
+- The combo costs 90% of its two items' combined price, rounded to the nearest cent, and needs the sum of their preparation units.
+- All other rules are the same as Stage 1.
+
 ## Stage comparisons
 
 Each comparison explains what changed between stages, why those changes were needed, and how existing game behavior was preserved.
@@ -204,6 +282,26 @@ Each comparison explains what changed between stages, why those changes were nee
 
 ### Stage 2 to Stage 3
 
+[Compare `stage-2` and `stage-3`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/compare/stage-2...stage-3)
+
+**New files**
+- `Host.java`: a staff role that seats one queued customer per turn, in addition to the Waiter, by reusing `Restaurant.seatCustomer()`.
+- `HostChoice.java`: carries the manager's Host decision (seat a customer at a table, or wait) from the CLI to the controller, like `WaiterChoice` and `ChefChoice`.
+- `HappyHour.java`: holds the pricing policy. It can be used once per game, lasts two turns, takes 20% off a bill and gives waiting customers 15 satisfaction.
+- `ComboMeal.java`: a `MenuItem` made of two other items. Its preparation units are their sum and its price is 90% of their combined price.
+
+**Changed files**
+- `Restaurant.java`: owns a `HappyHour`. `placeOrder()` applies the Happy Hour discount after the customer's own `billFor()`. It adds `activateHappyHour()`, `applyHappyHourRecovery()` and `getHappyHour()`, and its constructor now requires at least one table.
+- `Customer.java`: adds `recoverSatisfaction()` (capped at 100), so Happy Hour raises satisfaction through the customer's own operation. A customer also clears its table reference when it pays or leaves.
+- `GameController.java`: owns the Host, asks about Happy Hour at the start of each turn until it is used, lets the Host act before the Waiter, and adds the combo to the menu.
+- `GameCLI.java`: new prompts for the Host choice and for Happy Hour, and the display shows Happy Hour's status and the Host's availability.
+
+**Deleted files:** none.
+
+**What still works**
+- `Order`, `Menu`, `Dish`, the customer subclasses, `ScoreBoard`, `Waiter`, `Chef` and `Cashier` are unchanged, because the combo plugs into the `MenuItem` interface and the Host reuses the existing seating operation.
+- The Stage 2 customer behaviours still apply (waiting penalties of 8, 5 and 12 and the VIP discount), and the all-wait defeat run still gives 0 paid and 2 unhappy departures.
+- The Stage 1 and Stage 2 victory inputs no longer work as written, because every turn now asks for a Host choice and, until it is used, a Happy Hour answer. The combo is also the fourth menu item, so the ID rule gives customer 4 the combo and customer 5 Salad, and the Critic chooses the combo as the most expensive item.
 
 ## Diagrams
 
