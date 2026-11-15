@@ -329,9 +329,9 @@ Each comparison explains what changed between stages, why those changes were nee
 | Stage 2 | Levine | 4:42 – 7:42 |
 | Stage 3 | Anni | 7:43 – 10:53 |
 | Sequence diagram and design principles | Yi Xi | 10:54 – 12:53 |
-| Takeaway | Levine | 12:53 – 13:14 |
+| Takeaway | Levine | 12:54 – 13:14 |
 | Takeaway | Daphne | 13:15 – 13:35 |
-| Takeaway | Nicole | 13:35 – 13:56 |
+| Takeaway | Nicole | 13:36 – 13:56 |
 | Takeaway | Yi Xi | 13:57 – 14:16 |
 | Takeaway | Anni | 14:17 – 14:39 |
 | Conclusion | Nicole | 14:40 – 14:52 |
