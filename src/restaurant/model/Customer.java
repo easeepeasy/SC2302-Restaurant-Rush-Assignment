@@ -96,6 +96,7 @@ public abstract class Customer {
         }
         order.markPaid();
         state = CustomerState.PAID;
+        table = null;   // the Restaurant frees the table on payment, so drop the link to it
     }
 
     // Reduces satisfaction but does not allow it to go below 0.
@@ -121,6 +122,7 @@ public abstract class Customer {
             order.cancel();
         }
         state = CustomerState.LEFT;
+        table = null;   // the Restaurant frees the table when the customer leaves
     }
 
     @Override

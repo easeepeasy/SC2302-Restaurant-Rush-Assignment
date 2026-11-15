@@ -6,6 +6,7 @@ import java.util.OptionalDouble;
 import java.util.Scanner;
 
 import restaurant.control.ChefChoice;
+import restaurant.control.HostChoice;
 import restaurant.control.WaiterChoice;
 import restaurant.control.WaiterAction;
 import restaurant.model.Customer;
@@ -71,6 +72,27 @@ public class GameCLI {
         System.out.println("  Chef: " + availability(staff, 1) + " - prepare / wait");
         System.out.println("  Cashier: " + availability(staff, 2)
                 + " - automatically collects up to one eligible payment");
+        System.out.println("  Host: " + availability(staff, 3) + " - seat / wait");
+    }
+
+    public HostChoice readHostChoice() {
+        System.out.println("\nHost's action (seats a customer in addition to the Waiter):");
+        System.out.println("  1. Seat a waiting customer");
+        System.out.println("  2. Wait");
+
+        while (true) {
+            int action = readInt("Choose 1-2: ");
+            switch (action) {
+                case 1:
+                    int customerId = readInt("Customer ID: ");
+                    int tableId = readInt("Table ID: ");
+                    return HostChoice.seat(customerId, tableId);
+                case 2:
+                    return HostChoice.waitTurn();
+                default:
+                    showError("Choose an option from 1 to 2.");
+            }
+        }
     }
 
     public WaiterChoice readWaiterChoice() {

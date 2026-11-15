@@ -14,6 +14,9 @@ public class Restaurant {
     private final ScoreBoard scoreBoard = new ScoreBoard();
     private final HappyHour happyHour = new HappyHour();
     public Restaurant(int tableCount) {
+        if (tableCount < 1){
+            throw new IllegalArgumentException("A restaurant needs at least one table.");
+        }
         for (int i = 1; i <= tableCount; i++){
             tables.add(new Table(i));
         }

@@ -9,6 +9,7 @@ import restaurant.model.ComboMeal;
 import restaurant.model.CustomerType;
 import restaurant.model.Dish;
 import restaurant.model.GameConfig;
+import restaurant.model.Host;
 import restaurant.model.Menu;
 import restaurant.model.Restaurant;
 import restaurant.model.ScoreBoard;
@@ -27,6 +28,7 @@ public class GameController {
     private final Waiter waiter;
     private final Chef chef;
     private final Cashier cashier;
+    private final Host host;
     private final GameConfig config;
 
     public GameController(GameConfig config) {
@@ -51,6 +53,7 @@ public class GameController {
         waiter = new Waiter();
         chef = new Chef();
         cashier = new Cashier();
+        host = new Host();
     }
 
     // Plays all turns (no early ending), then shows Victory or Defeat.
@@ -70,6 +73,7 @@ public class GameController {
         waiter.resetForTurn();
         chef.resetForTurn();
         cashier.resetForTurn();
+        host.resetForTurn();
 
         // Happy Hour: the manager may switch it on once per game, at the start of a turn.
         // While it is active, waiting customers recover satisfaction at turn start.
@@ -79,11 +83,17 @@ public class GameController {
         }
         restaurant.applyHappyHourRecovery(turn);
 
-        cli.showState(restaurant, turn, List.of(waiter, chef, cashier));
+        cli.showState(restaurant, turn, List.of(waiter, chef, cashier, host));
 
-        // Steps 2-3: manager choices, Waiter before Chef.
+        // Steps 2-3: manager choices. The Host seats first (in addition to the Waiter), then Waiter before Chef.
         // An invalid choice shows why and asks again without using up the task.
-        ActionResult result = processWaiterChoice(cli.readWaiterChoice(), turn);
+        ActionResult result = processHostChoice(cli.readHostChoice(), turn);
+        while (!result.isSuccess()) {
+            cli.showError(result.getMessage());
+            result = processHostChoice(cli.readHostChoice(), turn);
+        }
+
+        result = processWaiterChoice(cli.readWaiterChoice(), turn);
         while (!result.isSuccess()) {
             cli.showError(result.getMessage());
             result = processWaiterChoice(cli.readWaiterChoice(), turn);
@@ -116,6 +126,14 @@ public class GameController {
                 waiter.waitTurn();
                 return ActionResult.ok("Waiter waits.");
         }
+    }
+
+    private ActionResult processHostChoice(HostChoice choice, int turn) {
+        if (choice.isWait()) {
+            host.waitTurn();
+            return ActionResult.ok("Host waits.");
+        }
+        return host.seat(choice.getCustomerId(), choice.getTableId(), restaurant);
     }
 
     // Asks the manager only while Happy Hour is still unused.
