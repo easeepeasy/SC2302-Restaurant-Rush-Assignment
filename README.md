@@ -342,3 +342,4 @@ Each comparison explains what changed between stages, why those changes were nee
 | | | |
 | | | |
 | | | |
+| Nicole | [`nicole`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/nicole) | [`ai-history`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/nicole/ai-history) |
