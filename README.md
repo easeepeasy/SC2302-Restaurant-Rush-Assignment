@@ -333,15 +333,15 @@ Each comparison explains what changed between stages, why those changes were nee
 | | | |
 | | | |
 
+
+
 ## Members and AI history
 
 | Member | Branch | AI history |
 |---|---|---|
 | Levine | [`levine`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/levine) | [`ai-history`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/levine/ai-history) |
-
-| Yi Xi | [`YiXi`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/YiXi) | [Stage 1](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/YiXi/Stage1) · [Stage 3](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/YiXi/Stage3) |
-
-| | | |
+| Yi Xi | [`YiXi`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/YiXi) | [`ai-history`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/YiXi/Stage1) |
 | | | |
 | | | |
 | Nicole | [`nicole`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/nicole) | [`ai-history`](https://github.com/easeepeasy/SC2302-Restaurant-Rush-Assignment/tree/nicole/ai-history) |
+
