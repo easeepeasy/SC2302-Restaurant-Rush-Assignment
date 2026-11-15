@@ -4,10 +4,8 @@ package restaurant.ui;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.Scanner;
-
 import restaurant.control.ChefChoice;
 import restaurant.control.WaiterChoice;
-import restaurant.control.WaiterAction;
 import restaurant.model.Customer;
 import restaurant.model.GameResult;
 import restaurant.model.Order;
@@ -84,13 +82,13 @@ public class GameCLI {
                 case 1:
                     int customerId = readInt("Customer ID: ");
                     int tableId = readInt("Table ID: ");
-                    return new WaiterChoice(WaiterAction.SEAT, customerId, tableId, -1);
+                    return WaiterChoice.seat(customerId, tableId);
                 case 2:
-                    return new WaiterChoice(WaiterAction.TAKE_ORDER, readInt("Customer ID: "), -1, -1);
+                    return WaiterChoice.takeOrder(readInt("Customer ID: "));
                 case 3:
-                    return new WaiterChoice(WaiterAction.SERVE, -1, -1, readInt("Order ID: "));
+                    return WaiterChoice.serve(readInt("Order ID: "));
                 case 4:
-                    return new WaiterChoice(WaiterAction.WAIT, -1, -1, -1);
+                    return WaiterChoice.waitTurn();
                 default:
                     showError("Choose an option from 1 to 4.");
             }
