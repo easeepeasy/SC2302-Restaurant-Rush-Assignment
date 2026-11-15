@@ -77,37 +77,53 @@ public class GameController {
 
         // Happy Hour: the manager may switch it on once per game, at the start of a turn.
         // While it is active, waiting customers recover satisfaction at turn start.
+        boolean happyHourWasUsed = restaurant.getHappyHour().isUsed();
+
         ActionResult happyHourResult = processHappyHour(turn);
+
         if (!happyHourResult.isSuccess()) {
             cli.showError(happyHourResult.getMessage());
+        } else if (!happyHourWasUsed && restaurant.getHappyHour().isUsed()) {
+            cli.showMessage(happyHourResult.getMessage());
         }
+
         restaurant.applyHappyHourRecovery(turn);
 
         cli.showState(restaurant, turn, List.of(waiter, chef, cashier, host));
 
         // Steps 2-3: manager choices. The Host seats first (in addition to the Waiter), then Waiter before Chef.
         // An invalid choice shows why and asks again without using up the task.
-        ActionResult result = processHostChoice(cli.readHostChoice(), turn);
-        while (!result.isSuccess()) {
-            cli.showError(result.getMessage());
-            result = processHostChoice(cli.readHostChoice(), turn);
-        }
+        ActionResult result = processHostChoice(cli.readHostChoice(restaurant), turn);
 
-        result = processWaiterChoice(cli.readWaiterChoice(), turn);
         while (!result.isSuccess()) {
             cli.showError(result.getMessage());
-            result = processWaiterChoice(cli.readWaiterChoice(), turn);
+            result = processHostChoice(cli.readHostChoice(restaurant), turn);
         }
+        cli.showMessage(result.getMessage());
 
-        result = processChefChoice(cli.readChefChoice(), turn);
+        result = processWaiterChoice(cli.readWaiterChoice(restaurant, turn), turn);
+
         while (!result.isSuccess()) {
             cli.showError(result.getMessage());
-            result = processChefChoice(cli.readChefChoice(), turn);
+            result = processWaiterChoice(cli.readWaiterChoice(restaurant, turn), turn);
         }
+        cli.showMessage(result.getMessage());
+
+        result = processChefChoice(cli.readChefChoice(restaurant), turn);
+
+        while (!result.isSuccess()) {
+            cli.showError(result.getMessage());
+            result = processChefChoice(cli.readChefChoice(restaurant), turn);
+        }
+        cli.showMessage(result.getMessage());
 
         // Step 4: eating, then automatic payment by the Cashier
         restaurant.finishEating(turn);
-        cashier.collectOldest(restaurant, turn);
+
+        ActionResult paymentResult = cashier.collectOldest(restaurant, turn);
+        if (paymentResult.isSuccess()) {
+            cli.showMessage(paymentResult.getMessage());
+        }
 
         // Step 5: waiting customers lose satisfaction; anyone at 0 leaves
         restaurant.applyWaitingPenalties();
