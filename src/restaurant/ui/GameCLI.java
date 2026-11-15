@@ -4,6 +4,11 @@ package restaurant.ui;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.StringJoiner;
+
+import restaurant.model.CustomerState;
+import restaurant.model.OrderStatus;
 import restaurant.control.ChefChoice;
 import restaurant.control.WaiterChoice;
 import restaurant.model.Customer;
@@ -69,54 +74,113 @@ public class GameCLI {
                 + " - automatically collects up to one eligible payment");
     }
 
-    public WaiterChoice readWaiterChoice() {
-        System.out.println("\nWaiter's action:");
-        System.out.println("  1. Seat a waiting customer");
-        System.out.println("  2. Take a seated customer's order");
-        System.out.println("  3. Serve a READY order");
-        System.out.println("  4. Wait");
-
+    
+    public WaiterChoice readWaiterChoice(Restaurant restaurant, int turn) {
         while (true) {
+            // Refresh eligibility whenever the menu is displayed.
+            List<Customer> waiting = restaurant.getWaitingQueue();
+            List<Table> freeTables = getFreeTables(restaurant);
+            List<Customer> orderable = getOrderableCustomers(restaurant);
+            List<Order> servable = getServableOrders(restaurant, turn);
+
+            System.out.println("\nWaiter's action:");
+            System.out.println("  1. Seat a waiting customer");
+            System.out.println("     Waiting: " + customerIds(waiting));
+            System.out.println("     Free tables: " + tableIds(freeTables));
+            System.out.println("  2. Take a seated customer's order");
+            System.out.println("     Eligible customers: " + customerIds(orderable));
+            System.out.println("  3. Serve a READY order");
+            System.out.println("     Eligible orders: " + orderDetails(servable));
+            System.out.println("  4. Wait");
+
             int action = readInt("Choose 1-4: ");
+
             switch (action) {
                 case 1:
+                    if (waiting.isEmpty()) {
+                        showError("No customers are waiting to be seated.");
+                        continue;
+                    }
+                    if (freeTables.isEmpty()) {
+                        showError("No free tables are available.");
+                        continue;
+                    }
+
+                    System.out.println("Eligible customers: " + customerIds(waiting));
+                    System.out.println("Available tables: " + tableIds(freeTables));
+
                     int customerId = readInt("Customer ID: ");
                     int tableId = readInt("Table ID: ");
                     return WaiterChoice.seat(customerId, tableId);
+
                 case 2:
+                    if (orderable.isEmpty()) {
+                        showError("No seated customers are waiting to place an order.");
+                        continue;
+                    }
+
+                    System.out.println("Eligible customers: " + customerIds(orderable));
                     return WaiterChoice.takeOrder(readInt("Customer ID: "));
+
                 case 3:
+                    if (servable.isEmpty()) {
+                        showError("No orders are ready to be served.");
+                        continue;
+                    }
+
+                    System.out.println("Eligible orders: " + orderDetails(servable));
                     return WaiterChoice.serve(readInt("Order ID: "));
+
                 case 4:
                     return WaiterChoice.waitTurn();
+
                 default:
                     showError("Choose an option from 1 to 4.");
             }
         }
     }
 
-    public ChefChoice readChefChoice() {
-        System.out.println("\nChef's action:");
-        System.out.println("  1. Prepare an order (one unit)");
-        System.out.println("  2. Wait");
 
+    
+    public ChefChoice readChefChoice(Restaurant restaurant) {
         while (true) {
+            List<Order> preparable = getPreparableOrders(restaurant);
+
+            System.out.println("\nChef's action:");
+            System.out.println("  1. Prepare an order (one unit)");
+            System.out.println("     Eligible orders: " + orderDetails(preparable));
+            System.out.println("  2. Wait");
+
             int action = readInt("Choose 1-2: ");
+
             switch (action) {
                 case 1:
+                    if (preparable.isEmpty()) {
+                        showError("No orders are available for preparation.");
+                        continue;
+                    }
+
+                    System.out.println("Eligible orders: " + orderDetails(preparable));
                     return ChefChoice.prepare(readInt("Order ID: "));
+
                 case 2:
                     return ChefChoice.waitTurn();
+
                 default:
                     showError("Choose an option from 1 to 2.");
             }
         }
     }
 
+
     public void showError(String message) {
         System.out.println("Invalid action: " + message);
         System.out.println("Please try again. The staff task has not been used.");
     }
+
+    public void showMessage(String message) {
+        System.out.println(message);
+    }   
 
     public void showResult(GameResult result, ScoreBoard score, int turnsUsed) {
         System.out.println();
@@ -162,6 +226,99 @@ public class GameCLI {
             return "unknown";
         }
         return staff.get(index).isAvailable() ? "available" : "busy";
+    }
+
+    // Free tables available for seating.
+    private List<Table> getFreeTables(Restaurant restaurant) {
+        List<Table> free = new ArrayList<>();
+
+        for (Table table : restaurant.getTables()) {
+            if (table.isFree()) {
+                free.add(table);
+            }
+        }
+        return free;
+    }
+
+    // Seated customers who have not placed an order.
+    private List<Customer> getOrderableCustomers(Restaurant restaurant) {
+        List<Customer> eligible = new ArrayList<>();
+
+        for (Table table : restaurant.getTables()) {
+            Customer customer = table.getOccupant();
+
+            if (customer != null
+                    && customer.getState() == CustomerState.SEATED
+                    && customer.getOrder() == null) {
+                eligible.add(customer);
+            }
+        }
+        return eligible;
+    }
+
+    // Orders eligible to be served on the current turn.
+    private List<Order> getServableOrders(Restaurant restaurant, int turn) {
+        List<Order> eligible = new ArrayList<>();
+
+        for (Order order : restaurant.getActiveOrders()) {
+            if (order.canServe(turn)) {
+                eligible.add(order);
+            }
+        }
+        return eligible;
+    }
+
+    // Orders that still require preparation.
+    private List<Order> getPreparableOrders(Restaurant restaurant) {
+        List<Order> eligible = new ArrayList<>();
+
+        for (Order order : restaurant.getActiveOrders()) {
+            if (order.getStatus() == OrderStatus.PLACED
+                    || order.getStatus() == OrderStatus.PREPARING) {
+                eligible.add(order);
+            }
+        }
+        return eligible;
+    }
+
+    // Format Customer IDs.
+    private String customerIds(List<Customer> customers) {
+        if (customers.isEmpty()) {
+            return "(none)";
+        }
+
+        StringJoiner ids = new StringJoiner(", ");
+        for (Customer customer : customers) {
+            ids.add("#" + customer.getId());
+        }
+        return ids.toString();
+    }
+
+    // Format Table IDs.
+    private String tableIds(List<Table> tables) {
+        if (tables.isEmpty()) {
+            return "(none)";
+        }
+
+        StringJoiner ids = new StringJoiner(", ");
+        for (Table table : tables) {
+            ids.add("#" + table.getId());
+        }
+        return ids.toString();
+    }
+
+    // Format Order IDs, items and preparation progress.
+    private String orderDetails(List<Order> orders) {
+        if (orders.isEmpty()) {
+            return "(none)";
+        }
+
+        StringJoiner details = new StringJoiner(", ");
+
+        for (Order order : orders) {
+            details.add("#" + order.getId() + " (" + order.toString() + ")");
+        }
+        return details.toString();
     }
 
     private String formatMoney(int cents) {

@@ -51,37 +51,49 @@ public class GameController {
         cli.showResult(score.evaluate(config), score, config.MAX_TURNS);
     }
 
+    
     private void runTurn(int turn) {
         // Step 1: arrivals
         arrivals.customerAt(turn).ifPresent(restaurant::enqueue);
 
-        // Start of turn: fresh tasks for the staff, then show the state
+        // Start of turn: reset staff tasks and display state.
         waiter.resetForTurn();
         chef.resetForTurn();
         cashier.resetForTurn();
         cli.showState(restaurant, turn, List.of(waiter, chef, cashier));
 
-        // Steps 2-3: manager choices, Waiter before Chef.
-        // An invalid choice shows why and asks again without using up the task.
-        ActionResult result = processWaiterChoice(cli.readWaiterChoice(), turn);
+        // Waiter action; invalid choices do not consume the task.
+        ActionResult result = processWaiterChoice(
+                cli.readWaiterChoice(restaurant, turn), turn);
+
         while (!result.isSuccess()) {
             cli.showError(result.getMessage());
-            result = processWaiterChoice(cli.readWaiterChoice(), turn);
+            result = processWaiterChoice(
+                    cli.readWaiterChoice(restaurant, turn), turn);
         }
+        cli.showMessage(result.getMessage());
 
-        result = processChefChoice(cli.readChefChoice(), turn);
+        // Chef action; updated state includes the Waiter's action.
+        result = processChefChoice(cli.readChefChoice(restaurant), turn);
+
         while (!result.isSuccess()) {
             cli.showError(result.getMessage());
-            result = processChefChoice(cli.readChefChoice(), turn);
+            result = processChefChoice(cli.readChefChoice(restaurant), turn);
         }
+        cli.showMessage(result.getMessage());
 
-        // Step 4: eating, then automatic payment by the Cashier
+        // Eating and automatic payment.
         restaurant.finishEating(turn);
-        cashier.collectOldest(restaurant, turn);
+        ActionResult paymentResult = cashier.collectOldest(restaurant, turn);
 
-        // Step 5: waiting customers lose satisfaction; anyone at 0 leaves
+        if (paymentResult.isSuccess()) {
+            cli.showMessage(paymentResult.getMessage());
+        }
+
+        // Satisfaction penalties and abandonment.
         restaurant.applyWaitingPenalties();
     }
+
 
     // Switches on the player's input, not on customer type
     private ActionResult processWaiterChoice(WaiterChoice choice, int turn) {
